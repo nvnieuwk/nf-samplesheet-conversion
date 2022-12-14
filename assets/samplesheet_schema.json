@@ -1,0 +1,35 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/nvnieuwk/nf-samplesheet-conversion/master/assets/samplesheet_schema.json",
+    "title": "Samplesheet validation schema",
+    "description": "Schema for the samplesheet used in this pipeline",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "meta": "id,sample"
+            },
+            "cram": {
+                "type": "string",
+                "pattern": "^\\S+\\.cram$",
+                "format": "file-path"
+            },
+            "crai": {
+                "type": "string",
+                "pattern": "^\\S+\\.crai$",
+                "format": "file-path",
+                "default": []
+            },
+            "bed": {
+                "type": "string",
+                "pattern": "^\\S+\\.bed$",
+                "format": "file-path",
+                "default": []
+            }
+        },
+        "required": ["sample", "cram"]
+    }
+}
