@@ -9,7 +9,6 @@
         "properties": {
             "sample": {
                 "type": "string",
-                "pattern": "^\\S+$",
                 "meta": "id,sample"
             },
             "cram": {
@@ -20,14 +19,12 @@
             "crai": {
                 "type": "string",
                 "pattern": "^\\S+\\.crai$",
-                "format": "file-path",
-                "default": []
+                "format": "file-path"
             },
             "bed": {
                 "type": "string",
                 "pattern": "^\\S+\\.bed$",
-                "format": "file-path",
-                "default": []
+                "format": "file-path"
             }
         },
         "required": ["sample", "cram"]

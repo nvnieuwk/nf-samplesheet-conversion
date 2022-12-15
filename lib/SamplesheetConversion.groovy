@@ -9,11 +9,12 @@ class SamplesheetConversion {
         Path samplesheet
     ) {
 
-        def schema = new File('assets/samplesheet_schema.json').text
-        def Map schemaFields = (Map) new JsonSlurper().parseText(schema).get('items').get('properties')
+        def schemaJson = new File('assets/samplesheet_schema.json').text
+        def Map schema = (Map) new JsonSlurper().parseText(schemaJson).get('items')
+        def Map schemaFields = schema.get("properties")
         def ArrayList allFields = schemaFields.keySet().collect()
-        def ArrayList requiredFields = schemaFields.required
-        def Integer row_count = 1
+        def ArrayList requiredFields = schema.get("required")
+        def Integer rowCount = 1
 
         // Header checks
         def ArrayList header
@@ -34,14 +35,42 @@ class SamplesheetConversion {
         // Field checks + returning the channels
         return Channel.value(samplesheet).splitCsv(header:true, strip:true).map({ row ->
 
-            def ArrayList fieldsToSee = allFields.clone()
+            rowCount++
+            def Map meta = [:]
+            def ArrayList output = []
+
             for( field : schemaFields ){
                 def String key = field.key
-                fieldsToSee.removeAll { it == key }
-                println(fieldsToSee)
-                println("${field.key}: ${row[field.key]}")
-            }
+                def String regexPattern = field.value.pattern && field.value.pattern != '' ? field.value.pattern : '^.*$'
+                def String metaNames = field.value.meta
+                
+                def String input = row[key]
 
+                // 
+                if(input == null){
+                    throw new Exception("[Samplesheet Error] Line ${rowCount} does not contain an input for field '${key}'.")
+                }
+                else if(input == "" && key in requiredFields){
+                    throw new Exception("[Samplesheet Error] Line ${rowCount} contains an empty input for required field '${key}'.")
+                }
+                else if(!(input ==~ regexPattern) && input != '') {
+                    throw new Exception("[Samplesheet Error] The '${key}' value on line ${rowCount} does not match the pattern '${regexPattern}'.")
+                }
+                else if(metaNames) {
+                    for(name : metaNames.tokenize(',')) {
+                        meta[name] = input != '' ? input.replace(' ', '_') : field.value.default ?: null
+                    }
+                }
+                else {
+                    def file = input != '' ? new File(input) : field.value.default ? new File(field.value.default) : []
+                    if( file != [] && !file.exists() ){
+                        throw new Exception("[Samplesheet Error] The '${key}' file (${input}) on line ${rowCount} does not exist.")
+                    }
+                    output.add(file)
+                    
+                }
+            }
+            output.add(0, meta)
             return output
         })
 
