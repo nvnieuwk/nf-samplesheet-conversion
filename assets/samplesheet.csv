@@ -1,3 +1,3 @@
-sample,cram,crai,bed
-test,assets/test.cram,assets/test.cram.crai,
-test2,assets/test.cram,assets/test.cram.crai,assets/test.bed
+sample,cram,bed,crai
+test,assets/test.cram,,assets/test.cram.crai,
+test2,assets/test.cram,assets/test.bed,
