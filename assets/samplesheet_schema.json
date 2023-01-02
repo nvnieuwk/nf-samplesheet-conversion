@@ -6,7 +6,7 @@
     "type": "array",
     "items": {
         "type": "object",
-        "properties": {
+        "definitions": {
             "sample": {
                 "type": "string",
                 "meta": "id,sample"

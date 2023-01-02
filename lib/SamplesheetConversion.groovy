@@ -11,7 +11,7 @@ class SamplesheetConversion {
 
         def schemaJson = new File('assets/samplesheet_schema.json').text
         def Map schema = (Map) new JsonSlurper().parseText(schemaJson).get('items')
-        def Map schemaFields = schema.get("properties")
+        def Map schemaFields = schema.get("definitions")
         def ArrayList allFields = schemaFields.keySet().collect()
         def ArrayList requiredFields = schema.get("required")
         def Integer rowCount = 1

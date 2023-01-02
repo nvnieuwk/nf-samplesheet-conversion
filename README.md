@@ -12,7 +12,7 @@ The script currently checks for a file called `assets/samplesheet_schema.json` w
     "type": "array",
     "items": {
         "type": "object",
-        "properties": {
+        "definitions": {
             "sample": {
                 "type": "string",
                 "meta": "id,sample"
@@ -38,7 +38,7 @@ The script currently checks for a file called `assets/samplesheet_schema.json` w
 }
 ```
 
-All fields should be present in the `items.properties` section. These should be in the order you want for the output channel e.g. for this schema the output channel will look like this: `[[id:sample, sample:sample], cram, crai, bed]`.
+All fields should be present in the `items.definitions` section. These should be in the order you want for the output channel e.g. for this schema the output channel will look like this: `[[id:sample, sample:sample], cram, crai, bed]`.
 
 These are all the parameters you can apply to a field:
 
