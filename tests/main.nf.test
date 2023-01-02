@@ -3,16 +3,109 @@ nextflow_pipeline {
     name "Test Workflow main.nf"
     script "main.nf"
 
-    test("Should run without failures") {
+    test("Success") {
 
         when {
             params {
-                input = "assets/samplesheet.csv"
+                input = "tests/inputs/samplesheet.csv"
             }
         }
 
         then {
             assert workflow.success
+            assert workflow.stdout.contains("[[id:test, sample:test], assets/test.cram, assets/test.cram.crai, []]")
+            assert workflow.stdout.contains("[[id:test2, sample:test2], assets/test.cram, [], assets/test.bed]")
+        }
+
+    }
+
+
+    test("Unwanted Field") {
+
+        when {
+            params {
+                input = "tests/inputs/unwanted_field.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet contains following unwanted field(s): [unwanted_field]")
+        }
+
+    }
+
+    test("Missing Field") {
+
+        when {
+            params {
+                input = "tests/inputs/missing_field.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet must contain 'sample,cram,crai,bed' as header field(s), but is missing these: [bed]")
+        }
+
+    }
+
+    test("Non existing Field") {
+
+        when {
+            params {
+                input = "tests/inputs/non_existing_field.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] Line 2 does not contain an input for field 'crai'.")
+        }
+
+    }
+
+    test("Empty required Field") {
+
+        when {
+            params {
+                input = "tests/inputs/empty_required_field.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] Line 2 contains an empty input for required field 'cram'.")
+        }
+
+    }
+
+    test("False pattern match") {
+
+        when {
+            params {
+                input = "tests/inputs/false_pattern_match.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' value on line 2 does not match the pattern '^\\S+\\.cram\$'.")
+        }
+
+    }
+
+    test("Non existing File") {
+
+        when {
+            params {
+                input = "tests/inputs/non_existing_file.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) on line 2 does not exist.")
         }
 
     }
