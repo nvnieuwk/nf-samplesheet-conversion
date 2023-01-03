@@ -3,7 +3,7 @@ nextflow_pipeline {
     name "Test Workflow main.nf"
     script "main.nf"
 
-    test("Success") {
+    test("CSV") {
 
         when {
             params {
@@ -20,6 +20,39 @@ nextflow_pipeline {
 
     }
 
+    test("TSV") {
+
+        when {
+            params {
+                input = "tests/inputs/samplesheet.tsv"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.trace.succeeded().size() == 2
+        }
+
+    }
+
+    test("Unknown extension") {
+
+        when {
+            params {
+                input = "tests/inputs/samplesheet_tsv.txt"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.trace.succeeded().size() == 2
+        }
+
+    }
 
     test("Unwanted Field") {
 
@@ -112,6 +145,22 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) on line 2 does not exist.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
+    test("Undetectable format") {
+
+        when {
+            params {
+                input = "tests/inputs/undetectable_format.txt"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout[0] ==~ "\\[Samplesheet Error\\] Could not derive file type from .*/tests/inputs/undetectable_format.txt. Please specify the file extension."
             assert workflow.trace.succeeded().size() == 0
         }
 
