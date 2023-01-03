@@ -7,23 +7,27 @@ import nextflow.Channel
 
 class SamplesheetConversion {
     public static DataflowBroadcast convert(
-        Path samplesheet
+        Path samplesheetFile,
+        Path schemaFile
     ) {
 
-        def schemaJson = new File('assets/samplesheet_schema.json').text
-        def Map schema = (Map) new JsonSlurper().parseText(schemaJson).get('items')
+        def Map schema = (Map) new JsonSlurper().parseText(schemaFile.text).get('items')
         def Map schemaFields = schema.get("definitions")
         def ArrayList allFields = schemaFields.keySet().collect()
         def ArrayList requiredFields = schema.get("required")
         def Integer rowCount = 1
 
-        // Header checks
-        def ArrayList header
-        samplesheet.withReader { header = it.readLine().tokenize(',') }
-        def ArrayList differences = allFields.plus(header)
-        differences.removeAll(allFields.intersect(header))
+        // Derive delimiter
+        def String header
+        samplesheetFile.withReader { header = it.readLine() }
 
-        def ArrayList samplesheetDifferences = header.intersect(differences)
+        def String delimiter = getDelimiter(header, samplesheetFile)
+
+        def ArrayList headerArray = header.tokenize(delimiter)
+        def ArrayList differences = allFields.plus(headerArray)
+        differences.removeAll(allFields.intersect(headerArray))
+
+        def ArrayList samplesheetDifferences = headerArray.intersect(differences)
         if(samplesheetDifferences.size > 0) {
             throw new Exception("[Samplesheet Error] The samplesheet contains following unwanted field(s): ${samplesheetDifferences}")
         }
@@ -34,7 +38,7 @@ class SamplesheetConversion {
         }
 
         // Field checks + returning the channels
-        return Channel.value(samplesheet).splitCsv(header:true, strip:true).map({ row ->
+        return Channel.value(samplesheetFile).splitCsv(header:true, strip:true, sep:delimiter).map({ row ->
 
             rowCount++
             def Map meta = [:]
@@ -75,6 +79,29 @@ class SamplesheetConversion {
             return output
         })
 
+    }
+
+    private static String getDelimiter(
+        String header,
+        Path samplesheetFile
+    ) {
+        def String extension = samplesheetFile.getExtension()
+        if (extension in ["csv", "tsv"]) {
+            return extension == "csv" ? "," : "\t"
+        }
+
+        def Integer commaCount = header.count(",")
+        def Integer tabCount = header.count("\t")
+
+        if ( commaCount == tabCount ){
+            throw new Exception("[Samplesheet Error] Could not derive file type from ${samplesheetFile}. Please specify the file extension.")
+        }
+        if ( commaCount > tabCount ){
+            return ","
+        }
+        else {
+            return "\t"
+        }
     }
 
 }
