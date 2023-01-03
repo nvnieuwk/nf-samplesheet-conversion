@@ -1,6 +1,7 @@
 import groovyx.gpars.dataflow.DataflowBroadcast
 import groovy.json.JsonSlurper
 import java.nio.file.Path
+import nextflow.Nextflow
 import nextflow.Channel
 
 
@@ -62,11 +63,11 @@ class SamplesheetConversion {
                     }
                 }
                 else {
-                    def file = input != '' ? new File(input) : field.value.default ? new File(field.value.default) : []
-                    if( file != [] && !file.exists() ){
+                    def inputFile = input != '' ? Nextflow.file(input) : field.value.default ? Nextflow.file(field.value.default) : []
+                    if( inputFile != [] && !inputFile.exists() ){
                         throw new Exception("[Samplesheet Error] The '${key}' file (${input}) on line ${rowCount} does not exist.")
                     }
-                    output.add(file)
+                    output.add(inputFile)
                     
                 }
             }

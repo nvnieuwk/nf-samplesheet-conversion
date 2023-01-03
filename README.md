@@ -1,6 +1,18 @@
 # Nextflow Samplesheet Conversion
 A script to validate a samplesheet and convert it to a Nextflow channel.
 
+No external dependencies are needed to run this script. All required functionality is already installed along `nextflow`.
+
+To use this script in your pipeline, you simply copy paste the `lib/SamplesheetConversion.groovy` file to the lib folder of your pipeline and then add the `convert` function to your pipeline code with the samplesheet as input:
+
+```nextflow
+workflow {
+    samplesheet_channel = SamplesheetConversion.convert(
+        file("assets/samplesheet.csv", checkIfExists:true)
+    )
+}
+```
+
 The script currently checks for a file called `assets/samplesheet_schema.json` which should look something like this:
 
 ```json
@@ -51,14 +63,6 @@ These are all the parameters you can apply to a field:
 
 All names of the required fields should be specified as a list under `items.required`
 
-To use this script in your pipeline, you simply copy paste the `lib/SamplesheetConversion.groovy` file to the lib folder of your pipeline and then add the `convert` function to your pipeline code with the samplesheet as input:
-
-```groovy
-nextflow.enable.dsl = 2
-
-workflow {
-    SamplesheetConversion.convert(file("assets/samplesheet.csv", checkIfExists:true)).view()
-}
-```
+To run the [tests](tests/) you need to install [nf-test](https://github.com/askimed/nf-test). And use the command `nf-test test` to run all tests.
 
 DISCLAIMER: This is just a simple script at the moment. All feedback and input are welcome :)
