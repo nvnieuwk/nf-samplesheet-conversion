@@ -13,7 +13,9 @@ workflow {
 }
 ```
 
-The script currently checks for a file called `assets/samplesheet_schema.json` which should look something like this:
+`SamplesheetConversion.convert()` requires two inputs: 
+1. The samplesheet to parse
+2. The schema detailing the validation
 
 ```json
 {

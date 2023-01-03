@@ -14,7 +14,10 @@ process MODULE {
 }
 
 workflow {
-    input = SamplesheetConversion.convert(file(params.input, checkIfExists:true)).view()
+    input = SamplesheetConversion.convert(
+            file(params.input, checkIfExists:true),
+            file(params.schema, checkIfExists:true)
+        ).view()
     MODULE(
         input
     )
