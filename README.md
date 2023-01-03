@@ -1,5 +1,5 @@
 # Nextflow Samplesheet Conversion
-A script to validate a samplesheet and convert it to a Nextflow channel.
+A script to validate a samplesheet (in CSV or TSV format) and convert it to a Nextflow channel.
 
 No external dependencies are needed to run this script. All required functionality is already installed along `nextflow`.
 
@@ -8,7 +8,8 @@ To use this script in your pipeline, you simply copy paste the `lib/SamplesheetC
 ```nextflow
 workflow {
     samplesheet_channel = SamplesheetConversion.convert(
-        file("assets/samplesheet.csv", checkIfExists:true)
+        file("assets/samplesheet.csv", checkIfExists:true),
+        file("assets/samplesheet_schema.json", checkIfExists:true)
     )
 }
 ```
