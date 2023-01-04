@@ -61,6 +61,7 @@ These are all the parameters you can apply to a field:
 |-----------|-------------|
 | pattern | The regex pattern to check on the current field. This will default to `^.*$` when an empty or no pattern is supplied. |
 | meta | The current field will be considered a meta value when this parameter is present. This parameter should contain a comma-delimited list of the meta fields to use this value for. |
+| unique | Whether or not the field should contain a unique value over the entire samplesheet. The default is `false`. |
 | type | The type of the input value - This check isn't currently implemented |
 | format | The format of the input value - This check isn't currently implemented |
 
