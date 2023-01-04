@@ -9,7 +9,8 @@
         "definitions": {
             "sample": {
                 "type": "string",
-                "meta": "id,sample"
+                "meta": "id,sample",
+                "unique": true
             },
             "cram": {
                 "type": "string",

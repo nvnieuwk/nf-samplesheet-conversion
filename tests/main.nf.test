@@ -166,4 +166,20 @@ nextflow_pipeline {
 
     }
 
+    test("Non-unique value found in unique field") {
+
+        when {
+            params {
+                input = "tests/inputs/unique_error.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The 'sample' value needs to be unique. 'test' was found twice in the samplesheet.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
 }

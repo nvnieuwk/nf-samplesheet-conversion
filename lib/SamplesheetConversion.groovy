@@ -38,6 +38,8 @@ class SamplesheetConversion {
         }
 
         // Field checks + returning the channels
+        def Map uniques = [:]
+
         return Channel.value(samplesheetFile).splitCsv(header:true, strip:true, sep:delimiter).map({ row ->
 
             rowCount++
@@ -51,17 +53,24 @@ class SamplesheetConversion {
                 
                 def String input = row[key]
 
-                // 
                 if(input == null){
                     throw new Exception("[Samplesheet Error] Line ${rowCount} does not contain an input for field '${key}'.")
                 }
                 else if(input == "" && key in requiredFields){
                     throw new Exception("[Samplesheet Error] Line ${rowCount} contains an empty input for required field '${key}'.")
                 }
+                else if(field.value.unique){
+                    if(!(key in uniques)){uniques[key] = []}
+                    if(input in uniques[key]){
+                        throw new Exception("[Samplesheet Error] The '${key}' value needs to be unique. '${input}' was found twice in the samplesheet.")
+                    }
+                    uniques[key].add(input)
+                }
                 else if(!(input ==~ regexPattern) && input != '') {
                     throw new Exception("[Samplesheet Error] The '${key}' value on line ${rowCount} does not match the pattern '${regexPattern}'.")
                 }
-                else if(metaNames) {
+                
+                if(metaNames) {
                     for(name : metaNames.tokenize(',')) {
                         meta[name] = input != '' ? input.replace(' ', '_') : field.value.default ?: null
                     }
