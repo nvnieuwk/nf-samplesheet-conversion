@@ -37,6 +37,40 @@ nextflow_pipeline {
 
     }
 
+    test("YML") {
+
+        when {
+            params {
+                input = "tests/inputs/samplesheet.yml"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.trace.succeeded().size() == 2
+        }
+
+    }
+
+    test("YAML") {
+
+        when {
+            params {
+                input = "tests/inputs/samplesheet.yaml"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.trace.succeeded().size() == 2
+        }
+
+    }
+
     test("Unknown extension") {
 
         when {
@@ -160,7 +194,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout[0] ==~ "\\[Samplesheet Error\\] Could not derive file type from .*/tests/inputs/undetectable_format.txt. Please specify the file extension."
+            assert workflow.stdout[0] ==~ "\\[Samplesheet Error\\] Could not derive file type from .*/tests/inputs/undetectable_format\\.txt\\. Please specify the file extension \\(CSV, TSV, YML and YAML are supported\\)\\."
             assert workflow.trace.succeeded().size() == 0
         }
 
