@@ -1,5 +1,5 @@
 # Nextflow Samplesheet Conversion
-A script to validate a samplesheet (in CSV or TSV format) and convert it to a Nextflow channel.
+A script to validate a samplesheet (in CSV, TSV or YAML format) and convert it to a Nextflow channel.
 
 No external dependencies are needed to run this script. All required functionality is already installed along `nextflow`.
 
@@ -68,5 +68,7 @@ These are all the parameters you can apply to a field:
 All names of the required fields should be specified as a list under `items.required`
 
 To run the [tests](tests/) you need to install [nf-test](https://github.com/askimed/nf-test). And use the command `nf-test test` to run all tests.
+
+Example samplesheets can be found in the [assets](assets/) folder.
 
 DISCLAIMER: This is just a simple script at the moment. All feedback and input are welcome :)
