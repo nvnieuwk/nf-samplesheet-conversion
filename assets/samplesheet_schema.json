@@ -10,6 +10,11 @@
             "meta": "id,sample",
             "unique": true
         },
+        "family": {
+            "type": "string",
+            "meta": "family",
+            "unique": true
+        },
         "cram": {
             "type": "string",
             "pattern": "^\\S+\\.cram$",
@@ -24,10 +29,16 @@
             "type": "string",
             "pattern": "^\\S+\\.bed$",
             "format": "file-path"
+        },
+        "ped": {
+            "type": "string",
+            "pattern": "^\\S+\\.ped$",
+            "format": "file-path"
         }
     },
     "required": ["sample", "cram"],
     "dependentRequired": {
-        "bed": ["crai"]
+        "ped": ["family"],
+        "family": ["ped"]
     }
 }
