@@ -8,8 +8,8 @@ To use this script in your pipeline, you simply copy paste the `lib/SamplesheetC
 ```nextflow
 workflow {
     samplesheet_channel = SamplesheetConversion.convert(
-        file("assets/samplesheet.csv", checkIfExists:true),
-        file("assets/samplesheet_schema.json", checkIfExists:true)
+        file("${projectDir}/assets/samplesheet.csv", checkIfExists:true),
+        file("${projectDir}/assets/samplesheet_schema.json", checkIfExists:true)
     )
 }
 ```
@@ -46,7 +46,10 @@ workflow {
             "format": "file-path"
         }
     },
-    "required": ["sample", "cram"]
+    "required": ["sample", "cram"],
+    "dependentRequired": {
+        "bed": ["crai"]
+    }
 }
 ```
 
