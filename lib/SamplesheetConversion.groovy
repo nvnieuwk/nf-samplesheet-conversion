@@ -33,19 +33,19 @@ class SamplesheetConversion {
         def Boolean headerCheck = true
         def Integer sampleCount = 0
 
-        return samplesheet.map({ row ->
+        return samplesheet.map({ entry ->
 
             sampleCount++
 
             // Check the header once for CSV/TSV and for every sample for YAML
             if(headerCheck) {
-                def ArrayList rowKeys = row.keySet().collect()
-                def ArrayList differences = allFields.plus(rowKeys)
-                differences.removeAll(allFields.intersect(rowKeys))
+                def ArrayList entryKeys = entry.keySet().collect()
+                def ArrayList differences = allFields.plus(entryKeys)
+                differences.removeAll(allFields.intersect(entryKeys))
 
                 def String yamlInfo = fileType == "yaml" ? " for sample ${sampleCount}." : ""
 
-                def ArrayList samplesheetDifferences = rowKeys.intersect(differences)
+                def ArrayList samplesheetDifferences = entryKeys.intersect(differences)
                 if(samplesheetDifferences.size > 0) {
                     throw new Exception("[Samplesheet Error] The samplesheet contains following unwanted field(s): ${samplesheetDifferences}${yamlInfo}")
                 }
@@ -64,10 +64,10 @@ class SamplesheetConversion {
             def Map dependencies = schema.get("dependentRequired")
             if(dependencies) {
                 for( dependency in dependencies ){
-                    if(row[dependency.key] != "" && row[dependency.key]) {
+                    if(entry[dependency.key] != "" && entry[dependency.key]) {
                         def ArrayList missingValues = []
                         for( value in dependency.value ){
-                            if(row[value] == "" || !row[value]) {
+                            if(entry[value] == "" || !entry[value]) {
                                 missingValues.add(value)
                             }
                         }
@@ -86,7 +86,7 @@ class SamplesheetConversion {
                 def String regexPattern = field.value.pattern && field.value.pattern != '' ? field.value.pattern : '^.*$'
                 def String metaNames = field.value.meta
                 
-                def String input = row[key]
+                def String input = entry[key]
 
                 if((input == null || input == "") && key in requiredFields){
                     throw new Exception("[Samplesheet Error] Sample ${sampleCount} does not contain an input for required field '${key}'.")
