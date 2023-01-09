@@ -6,7 +6,7 @@
     "type": "array",
     "items": {
         "type": "object",
-        "definitions": {
+        "properties": {
             "sample": {
                 "type": "string",
                 "meta": "id,sample",
@@ -28,6 +28,9 @@
                 "format": "file-path"
             }
         },
-        "required": ["sample", "cram"]
+        "required": ["sample", "cram"],
+        "dependentRequired": {
+            "bed": ["crai"]
+        }
     }
 }
