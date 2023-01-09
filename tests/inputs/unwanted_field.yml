@@ -1,0 +1,7 @@
+- sample: test
+  cram: assets/test.cram
+  crai: assets/test.cram.crai
+  unwanted_field: meh
+- sample: test2
+  cram: assets/test.cram
+  bed: assets/test.bed

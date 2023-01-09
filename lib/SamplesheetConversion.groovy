@@ -12,46 +12,72 @@ class SamplesheetConversion {
         Path schemaFile
     ) {
 
-        def Map schema = (Map) new JsonSlurper().parseText(schemaFile.text).get('items')
-        def Map schemaFields = schema.get("definitions")
+        def Map schema = (Map) new JsonSlurper().parseText(schemaFile.text)
+        def Map schemaFields = schema.get("properties")
         def ArrayList allFields = schemaFields.keySet().collect()
         def ArrayList requiredFields = schema.get("required")
-        def Integer rowCount = 1
 
         def String fileType = getFileType(samplesheetFile)
-        def String header
+        def String delimiter = fileType == "csv" ? "," : fileType == "tsv" ? "\t" : null
         def DataflowBroadcast samplesheet
 
         if(fileType == "yaml"){
             samplesheet = Channel.fromList(new Yaml().load((samplesheetFile.text)))
         }
         else {
-            header = getHeader(samplesheetFile)
-            def String delimiter = fileType == "csv" ? "," : fileType == "tsv" ? "\t" : null
-
-            def ArrayList headerArray = header.tokenize(delimiter)
-            def ArrayList differences = allFields.plus(headerArray)
-            differences.removeAll(allFields.intersect(headerArray))
-
-            def ArrayList samplesheetDifferences = headerArray.intersect(differences)
-            if(samplesheetDifferences.size > 0) {
-                throw new Exception("[Samplesheet Error] The samplesheet contains following unwanted field(s): ${samplesheetDifferences}")
-            }
-
-            def ArrayList schemaDifferences = allFields.intersect(differences)
-            if(schemaDifferences.size > 0) {
-                throw new Exception("[Samplesheet Error] The samplesheet must contain '${allFields.join(",")}' as header field(s), but is missing these: ${schemaDifferences}")
-            }
-
             samplesheet = Channel.value(samplesheetFile).splitCsv(header:true, strip:true, sep:delimiter)
         }
 
         // Field checks + returning the channels
         def Map uniques = [:]
+        def Boolean headerCheck = true
+        def Integer sampleCount = 0
 
         return samplesheet.map({ row ->
 
-            rowCount++
+            sampleCount++
+
+            // Check the header once for CSV/TSV and for every sample for YAML
+            if(headerCheck) {
+                def ArrayList rowKeys = row.keySet().collect()
+                def ArrayList differences = allFields.plus(rowKeys)
+                differences.removeAll(allFields.intersect(rowKeys))
+
+                def String yamlInfo = fileType == "yaml" ? " for sample ${sampleCount}." : ""
+
+                def ArrayList samplesheetDifferences = rowKeys.intersect(differences)
+                if(samplesheetDifferences.size > 0) {
+                    throw new Exception("[Samplesheet Error] The samplesheet contains following unwanted field(s): ${samplesheetDifferences}${yamlInfo}")
+                }
+
+                def ArrayList requiredDifferences = requiredFields.intersect(differences)
+                if(requiredDifferences.size > 0) {
+                    throw new Exception("[Samplesheet Error] The samplesheet requires '${requiredFields.join(",")}' as header field(s), but is missing these: ${requiredDifferences}${yamlInfo}")
+                }
+
+                if(fileType in ["csv", "tsv"]) {
+                    headerCheck = false
+                }
+            }
+
+            // Check required dependencies
+            def Map dependencies = schema.get("dependentRequired")
+            if(dependencies) {
+                for( dependency in dependencies ){
+                    if(row[dependency.key] != "" && row[dependency.key]) {
+                        def ArrayList missingValues = []
+                        for( value in dependency.value ){
+                            if(row[value] == "" || !row[value]) {
+                                missingValues.add(value)
+                            }
+                        }
+                        if (missingValues) {
+                            throw new Exception("[Samplesheet Error] ${dependency.value} field(s) should be defined when '${dependency.key}' is specified, but  the field(s) ${missingValues} are/is not defined.")
+                        }
+                    }
+                }
+            }
+
             def Map meta = [:]
             def ArrayList output = []
 
@@ -62,36 +88,29 @@ class SamplesheetConversion {
                 
                 def String input = row[key]
 
-                if(input == null && fileType == "yaml"){
-                    input = ""
-                }
-
-                if(input == null){
-                    throw new Exception("[Samplesheet Error] Line ${rowCount} does not contain an input for field '${key}'.")
-                }
-                else if(input == "" && key in requiredFields){
-                    throw new Exception("[Samplesheet Error] Line ${rowCount} contains an empty input for required field '${key}'.")
+                if((input == null || input == "") && key in requiredFields){
+                    throw new Exception("[Samplesheet Error] Sample ${sampleCount} does not contain an input for required field '${key}'.")
                 }
                 else if(field.value.unique){
                     if(!(key in uniques)){uniques[key] = []}
-                    if(input in uniques[key]){
+                    if(input in uniques[key] && input){
                         throw new Exception("[Samplesheet Error] The '${key}' value needs to be unique. '${input}' was found twice in the samplesheet.")
                     }
                     uniques[key].add(input)
                 }
-                else if(!(input ==~ regexPattern) && input != '') {
-                    throw new Exception("[Samplesheet Error] The '${key}' value on line ${rowCount} does not match the pattern '${regexPattern}'.")
+                else if(!(input ==~ regexPattern) && input != '' && input) {
+                    throw new Exception("[Samplesheet Error] The '${key}' value for sample ${sampleCount} does not match the pattern '${regexPattern}'.")
                 }
-                
+
                 if(metaNames) {
                     for(name : metaNames.tokenize(',')) {
-                        meta[name] = input != '' ? input.replace(' ', '_') : field.value.default ?: null
+                        meta[name] = (input != '' && input) ? input.replace(' ', '_') : field.value.default ?: null
                     }
                 }
                 else {
-                    def inputFile = input != '' ? Nextflow.file(input) : field.value.default ? Nextflow.file(field.value.default) : []
+                    def inputFile = (input != '' && input) ? Nextflow.file(input) : field.value.default ? Nextflow.file(field.value.default) : []
                     if( inputFile != [] && !inputFile.exists() ){
-                        throw new Exception("[Samplesheet Error] The '${key}' file (${input}) on line ${rowCount} does not exist.")
+                        throw new Exception("[Samplesheet Error] The '${key}' file (${input}) for sample ${sampleCount} does not exist.")
                     }
                     output.add(inputFile)
                     
@@ -134,5 +153,4 @@ class SamplesheetConversion {
         samplesheetFile.withReader { header = it.readLine() }
         return header
     }
-
 }

@@ -2,7 +2,7 @@ nextflow.enable.dsl = 2
 
 process MODULE {
     input:
-    tuple val(meta), path(cram), path(crai), path(bed)
+    tuple val(meta), path(cram), path(crai), path(bed), path(bed)
 
     output:
     tuple val(meta), path("*.txt"), emit: txt

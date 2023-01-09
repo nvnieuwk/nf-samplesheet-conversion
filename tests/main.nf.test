@@ -13,8 +13,8 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
-            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
-            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
 
@@ -30,8 +30,8 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
-            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
-            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
 
@@ -47,8 +47,8 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
-            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
-            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
 
@@ -64,8 +64,8 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
-            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
-            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
 
@@ -81,14 +81,46 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
-            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\]\\]'
-            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed\\]'
+            assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
+            assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
 
     }
 
-    test("Unwanted Field") {
+    test("YAML - Unwanted Field") {
+
+        when {
+            params {
+                input = "tests/inputs/unwanted_field.yml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet contains following unwanted field(s): [unwanted_field] for sample 1.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
+    test("YAML - Missing Required Field") {
+
+        when {
+            params {
+                input = "tests/inputs/missing_required_field.yaml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet requires 'sample,cram' as header field(s), but is missing these: [cram] for sample 1.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
+    test("CSV/TSV - Unwanted Field") {
 
         when {
             params {
@@ -104,33 +136,17 @@ nextflow_pipeline {
 
     }
 
-    test("Missing Field") {
+    test("CSV/TSV - Missing Required Field") {
 
         when {
             params {
-                input = "tests/inputs/missing_field.csv"
+                input = "tests/inputs/missing_required_field.csv"
             }
         }
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet must contain 'sample,cram,crai,bed' as header field(s), but is missing these: [bed]")
-            assert workflow.trace.succeeded().size() == 0
-        }
-
-    }
-
-    test("Non existing Field") {
-
-        when {
-            params {
-                input = "tests/inputs/non_existing_field.csv"
-            }
-        }
-
-        then {
-            assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] Line 2 does not contain an input for field 'crai'.")
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet requires 'sample,cram' as header field(s), but is missing these: [sample]")
             assert workflow.trace.succeeded().size() == 0
         }
 
@@ -146,7 +162,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] Line 2 contains an empty input for required field 'cram'.")
+            assert workflow.stdout.contains("[Samplesheet Error] Sample 1 does not contain an input for required field 'cram'.")
             assert workflow.trace.succeeded().size() == 0
         }
 
@@ -162,7 +178,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' value on line 2 does not match the pattern '^\\S+\\.cram\$'.")
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' value for sample 1 does not match the pattern '^\\S+\\.cram\$'.")
             assert workflow.trace.succeeded().size() == 0
         }
 
@@ -178,7 +194,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) on line 2 does not exist.")
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) for sample 1 does not exist.")
             assert workflow.trace.succeeded().size() == 0
         }
 
@@ -211,6 +227,22 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The 'sample' value needs to be unique. 'test' was found twice in the samplesheet.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
+    test("Faulty dependency") {
+
+        when {
+            params {
+                input = "tests/inputs/faulty_dependency.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] [ped] field(s) should be defined when 'family' is specified, but  the field(s) [ped] are/is not defined.")
             assert workflow.trace.succeeded().size() == 0
         }
 
