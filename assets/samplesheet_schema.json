@@ -3,34 +3,31 @@
     "$id": "https://raw.githubusercontent.com/nvnieuwk/nf-samplesheet-conversion/master/assets/samplesheet_schema.json",
     "title": "Samplesheet validation schema",
     "description": "Schema for the samplesheet used in this pipeline",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "sample": {
-                "type": "string",
-                "meta": "id,sample",
-                "unique": true
-            },
-            "cram": {
-                "type": "string",
-                "pattern": "^\\S+\\.cram$",
-                "format": "file-path"
-            },
-            "crai": {
-                "type": "string",
-                "pattern": "^\\S+\\.crai$",
-                "format": "file-path"
-            },
-            "bed": {
-                "type": "string",
-                "pattern": "^\\S+\\.bed$",
-                "format": "file-path"
-            }
+    "type": "object",
+    "properties": {
+        "sample": {
+            "type": "string",
+            "meta": "id,sample",
+            "unique": true
         },
-        "required": ["sample", "cram"],
-        "dependentRequired": {
-            "bed": ["crai"]
+        "cram": {
+            "type": "string",
+            "pattern": "^\\S+\\.cram$",
+            "format": "file-path"
+        },
+        "crai": {
+            "type": "string",
+            "pattern": "^\\S+\\.crai$",
+            "format": "file-path"
+        },
+        "bed": {
+            "type": "string",
+            "pattern": "^\\S+\\.bed$",
+            "format": "file-path"
         }
+    },
+    "required": ["sample", "cram"],
+    "dependentRequired": {
+        "bed": ["crai"]
     }
 }

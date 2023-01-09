@@ -12,7 +12,7 @@ class SamplesheetConversion {
         Path schemaFile
     ) {
 
-        def Map schema = (Map) new JsonSlurper().parseText(schemaFile.text).get('items')
+        def Map schema = (Map) new JsonSlurper().parseText(schemaFile.text)
         def Map schemaFields = schema.get("properties")
         def ArrayList allFields = schemaFields.keySet().collect()
         def ArrayList requiredFields = schema.get("required")
