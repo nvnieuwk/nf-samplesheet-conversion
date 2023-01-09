@@ -88,7 +88,39 @@ nextflow_pipeline {
 
     }
 
-    test("Unwanted Field") {
+    test("YAML - Unwanted Field") {
+
+        when {
+            params {
+                input = "tests/inputs/unwanted_field.yml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet contains following unwanted field(s): [unwanted_field] for sample 1.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
+    test("YAML - Missing Required Field") {
+
+        when {
+            params {
+                input = "tests/inputs/missing_required_field.yaml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The samplesheet requires 'sample,cram' as header field(s), but is missing these: [cram] for sample 1.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
+    test("CSV/TSV - Unwanted Field") {
 
         when {
             params {
@@ -104,7 +136,7 @@ nextflow_pipeline {
 
     }
 
-    test("Missing Required Field") {
+    test("CSV/TSV - Missing Required Field") {
 
         when {
             params {
@@ -130,7 +162,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] Line 2 does not contain an input for required field 'cram'.")
+            assert workflow.stdout.contains("[Samplesheet Error] Sample 1 does not contain an input for required field 'cram'.")
             assert workflow.trace.succeeded().size() == 0
         }
 
@@ -146,7 +178,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' value on line 2 does not match the pattern '^\\S+\\.cram\$'.")
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' value for sample 1 does not match the pattern '^\\S+\\.cram\$'.")
             assert workflow.trace.succeeded().size() == 0
         }
 
@@ -162,7 +194,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) on line 2 does not exist.")
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) for sample 1 does not exist.")
             assert workflow.trace.succeeded().size() == 0
         }
 

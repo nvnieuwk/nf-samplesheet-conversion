@@ -1,0 +1,5 @@
+- sample: test
+  crai: assets/test.cram.crai
+- sample: test2
+  cram: assets/test.cram
+  bed: assets/test.bed
