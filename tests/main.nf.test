@@ -232,4 +232,20 @@ nextflow_pipeline {
 
     }
 
+    test("Faulty dependency") {
+
+        when {
+            params {
+                input = "tests/inputs/faulty_dependency.csv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] [ped] field(s) should be defined when 'family' is specified, but  the field(s) [ped] are/is not defined.")
+            assert workflow.trace.succeeded().size() == 0
+        }
+
+    }
+
 }

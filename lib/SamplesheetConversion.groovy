@@ -37,6 +37,7 @@ class SamplesheetConversion {
 
             sampleCount++
 
+            // Check the header once for CSV/TSV and for every sample for YAML
             if(headerCheck) {
                 def ArrayList rowKeys = row.keySet().collect()
                 def ArrayList differences = allFields.plus(rowKeys)
@@ -58,7 +59,24 @@ class SamplesheetConversion {
                     headerCheck = false
                 }
             }
-            
+
+            // Check required dependencies
+            def Map dependencies = schema.get("dependentRequired")
+            if(dependencies) {
+                for( dependency in dependencies ){
+                    if(row[dependency.key] != "" && row[dependency.key]) {
+                        def ArrayList missingValues = []
+                        for( value in dependency.value ){
+                            if(row[value] == "" || !row[value]) {
+                                missingValues.add(value)
+                            }
+                        }
+                        if (missingValues) {
+                            throw new Exception("[Samplesheet Error] ${dependency.value} field(s) should be defined when '${dependency.key}' is specified, but  the field(s) ${missingValues} are/is not defined.")
+                        }
+                    }
+                }
+            }
 
             def Map meta = [:]
             def ArrayList output = []
