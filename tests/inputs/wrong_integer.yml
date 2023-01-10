@@ -1,0 +1,8 @@
+- meta_string: meta
+  meta_integer: a_string
+  meta_boolean: true
+  string: 789
+  integer: 456
+  boolean: false
+  file: assets/test.bed
+  directory: assets/
