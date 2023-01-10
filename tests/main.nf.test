@@ -4,248 +4,203 @@ nextflow_pipeline {
     script "main.nf"
 
     test("CSV") {
-
         when {
             params {
                 input = "tests/inputs/samplesheet.csv"
             }
         }
-
         then {
             assert workflow.success
             assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
             assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
-
     }
 
     test("TSV") {
-
         when {
             params {
                 input = "tests/inputs/samplesheet.tsv"
             }
         }
-
         then {
             assert workflow.success
             assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
             assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
-
     }
 
     test("YML") {
-
         when {
             params {
                 input = "tests/inputs/samplesheet.yml"
             }
         }
-
         then {
             assert workflow.success
             assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
             assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
-
     }
 
     test("YAML") {
-
         when {
             params {
                 input = "tests/inputs/samplesheet.yaml"
             }
         }
-
         then {
             assert workflow.success
             assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
             assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
-
     }
 
     test("Unknown extension") {
-
         when {
             params {
                 input = "tests/inputs/samplesheet_tsv.txt"
             }
         }
-
         then {
             assert workflow.success
             assert workflow.stdout[0] ==~ '\\[\\[id:test, sample:test, family:null\\], .*/assets/test\\.cram, .*/assets/test\\.cram\\.crai, \\[\\], \\[\\]\\]'
             assert workflow.stdout[1] ==~ '\\[\\[id:test2, sample:test2, family:null\\], .*/assets/test\\.cram, \\[\\], .*/assets/test\\.bed, \\[\\]\\]'
             assert workflow.trace.succeeded().size() == 2
         }
-
     }
 
     test("YAML - Unwanted Field") {
-
         when {
             params {
                 input = "tests/inputs/unwanted_field.yml"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The samplesheet contains following unwanted field(s): [unwanted_field] for sample 1.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("YAML - Missing Required Field") {
-
         when {
             params {
                 input = "tests/inputs/missing_required_field.yaml"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The samplesheet requires 'sample,cram' as header field(s), but is missing these: [cram] for sample 1.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("CSV/TSV - Unwanted Field") {
-
         when {
             params {
                 input = "tests/inputs/unwanted_field.csv"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The samplesheet contains following unwanted field(s): [unwanted_field]")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("CSV/TSV - Missing Required Field") {
-
         when {
             params {
                 input = "tests/inputs/missing_required_field.csv"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The samplesheet requires 'sample,cram' as header field(s), but is missing these: [sample]")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("Empty required Field") {
-
         when {
             params {
                 input = "tests/inputs/empty_required_field.csv"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] Sample 1 does not contain an input for required field 'cram'.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("False pattern match") {
-
         when {
             params {
                 input = "tests/inputs/false_pattern_match.csv"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The 'cram' value for sample 1 does not match the pattern '^\\S+\\.cram\$'.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("Non existing File") {
-
         when {
             params {
                 input = "tests/inputs/non_existing_file.csv"
             }
         }
-
         then {
             assert workflow.failed
-            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file (assets/oops.cram) for sample 1 does not exist.")
+            assert workflow.stdout.contains("[Samplesheet Error] The 'cram' file or directory (assets/oops.cram) for sample 1 does not exist.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("Undetectable format") {
-
         when {
             params {
                 input = "tests/inputs/undetectable_format.txt"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout[0] ==~ "\\[Samplesheet Error\\] Could not derive file type from .*/tests/inputs/undetectable_format\\.txt\\. Please specify the file extension \\(CSV, TSV, YML and YAML are supported\\)\\."
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("Non-unique value found in unique field") {
-
         when {
             params {
                 input = "tests/inputs/unique_error.csv"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] The 'sample' value needs to be unique. 'test' was found twice in the samplesheet.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
     test("Faulty dependency") {
-
         when {
             params {
                 input = "tests/inputs/faulty_dependency.csv"
             }
         }
-
         then {
             assert workflow.failed
             assert workflow.stdout.contains("[Samplesheet Error] [ped] field(s) should be defined when 'family' is specified, but  the field(s) [ped] are/is not defined.")
             assert workflow.trace.succeeded().size() == 0
         }
-
     }
 
 }
