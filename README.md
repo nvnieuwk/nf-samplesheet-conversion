@@ -68,8 +68,30 @@ These are all the parameters you can apply to a field. All fields should be spec
 | pattern | The regex pattern to check on the current field. This will default to `^.*$` when an empty or no pattern is supplied. |
 | meta | The current field will be considered a meta value when this parameter is present. This parameter should contain a comma-delimited list of the meta fields to use this value for. |
 | unique | Whether or not the field should contain a unique value over the entire samplesheet. The default is `false`. |
-| type | The type of the input value - This check isn't currently implemented |
-| format | The format of the input value - This check isn't currently implemented |
+| type | The type of the input value. The input will be automatically converted to this type. To see all possibilities go to [Types](#types) |
+| format | The format of the input value, only useable if the type is `string`. To see all possibilities go to [Formats](#formats) |
+
+
+#### Types
+
+Following table shows all currently implemented types with a description.
+
+| Type | Description |
+|-----------|-------------|
+| string | A string field can consist of all possible characters except for the delimiters when using CSV or TSV files. |
+| integer | An integer field can only contain numeral characters and decimal points. |
+| boolean | A boolean field can only contain `true` or `false`. This is case insensitive, but will transform this value to a Groovy Boolean type (`true` or `false`). |
+
+#### Formats
+
+Formats can be used to check string values for certain properties. The input will also be transformed to the correct type.
+
+Following table shows all currently implemented formats with a description.
+
+| Type | Description |
+|-----------|-------------|
+| file-path | Automatically checks if the file exists and transforms the `String` type to a `Nextflow.File` type, which is usable in Nextflow processes as a `path` input |
+| directory-path | Automatically checks if the directory exists and transforms the `String` type to a `Nextflow.File` type, which is usable in Nextflow processes as a `path` input. This is currently synonymous for `file-path`. |
 
 ### `required`
 All names of the required fields should be specified as an array under `required`.
