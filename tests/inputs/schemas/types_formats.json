@@ -5,34 +5,34 @@
     "description": "Schema for the samplesheet used in this pipeline",
     "type": "object",
     "properties": {
-        "sample": {
+        "meta_string": {
             "type": "string",
-            "meta": "id,sample",
-            "unique": true
+            "meta": "string"
         },
-        "family": {
-            "type": "string",
-            "meta": "family"
+        "meta_integer": {
+            "type": "integer",
+            "meta": "integer"
         },
-        "cram": {
+        "meta_boolean": {
+            "type": "boolean",
+            "meta": "boolean"
+        },
+        "string": {
+            "type": "string"
+        },
+        "integer": {
+            "type": "integer"
+        },
+        "boolean": {
+            "type": "boolean"
+        },
+        "file": {
             "type": "string",
-            "pattern": "^\\S+\\.cram$",
             "format": "file-path"
         },
-        "crai": {
+        "directory": {
             "type": "string",
-            "pattern": "^\\S+\\.crai$",
-            "format": "file-path"
-        },
-        "bed": {
-            "type": "string",
-            "pattern": "^\\S+\\.bed$",
-            "format": "file-path"
-        },
-        "ped": {
-            "type": "string",
-            "pattern": "^\\S+\\.ped$",
-            "format": "file-path"
+            "format": "directory-path"
         }
     },
     "required": ["sample", "cram"],

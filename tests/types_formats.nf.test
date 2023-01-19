@@ -1,0 +1,42 @@
+nextflow_pipeline {
+
+    name "Test Workflow for types and formats"
+    script "simple.nf"
+    config "tests/configs/types_formats.config"
+
+    test("Success") {
+        when {
+            params {
+                input = "tests/inputs/types_formats.yml"
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.stdout[0] ==~ "\\[\\[string:meta, integer:123, boolean:true], 789, 456, false, .*/assets/test\\.bed, .*/assets\\]"
+        }
+    }
+
+    test("Wrong integer") {
+        when {
+            params {
+                input = "tests/inputs/wrong_integer.yml"
+            }
+        }
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The 'meta_integer' value (a_string) for sample 1 is not a valid integer.")
+        }
+    }
+
+    test("Wrong boolean") {
+        when {
+            params {
+                input = "tests/inputs/wrong_boolean.yml"
+            }
+        }
+        then {
+            assert workflow.failed
+            assert workflow.stdout.contains("[Samplesheet Error] The 'meta_boolean' value (a_string) for sample 1 is not a valid boolean.")
+        }
+    }
+}

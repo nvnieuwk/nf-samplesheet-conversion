@@ -33,19 +33,19 @@ class SamplesheetConversion {
         def Boolean headerCheck = true
         def Integer sampleCount = 0
 
-        return samplesheet.map({ row ->
+        return samplesheet.map({ entry ->
 
             sampleCount++
 
             // Check the header once for CSV/TSV and for every sample for YAML
             if(headerCheck) {
-                def ArrayList rowKeys = row.keySet().collect()
-                def ArrayList differences = allFields.plus(rowKeys)
-                differences.removeAll(allFields.intersect(rowKeys))
+                def ArrayList entryKeys = entry.keySet().collect()
+                def ArrayList differences = allFields.plus(entryKeys)
+                differences.removeAll(allFields.intersect(entryKeys))
 
                 def String yamlInfo = fileType == "yaml" ? " for sample ${sampleCount}." : ""
 
-                def ArrayList samplesheetDifferences = rowKeys.intersect(differences)
+                def ArrayList samplesheetDifferences = entryKeys.intersect(differences)
                 if(samplesheetDifferences.size > 0) {
                     throw new Exception("[Samplesheet Error] The samplesheet contains following unwanted field(s): ${samplesheetDifferences}${yamlInfo}")
                 }
@@ -64,10 +64,10 @@ class SamplesheetConversion {
             def Map dependencies = schema.get("dependentRequired")
             if(dependencies) {
                 for( dependency in dependencies ){
-                    if(row[dependency.key] != "" && row[dependency.key]) {
+                    if(entry[dependency.key] != "" && entry[dependency.key]) {
                         def ArrayList missingValues = []
                         for( value in dependency.value ){
-                            if(row[value] == "" || !row[value]) {
+                            if(entry[value] == "" || !entry[value]) {
                                 missingValues.add(value)
                             }
                         }
@@ -86,10 +86,13 @@ class SamplesheetConversion {
                 def String regexPattern = field.value.pattern && field.value.pattern != '' ? field.value.pattern : '^.*$'
                 def String metaNames = field.value.meta
                 
-                def String input = row[key]
+                def String input = entry[key]
 
                 if((input == null || input == "") && key in requiredFields){
                     throw new Exception("[Samplesheet Error] Sample ${sampleCount} does not contain an input for required field '${key}'.")
+                }
+                else if(!(input ==~ regexPattern) && input != '' && input) {
+                    throw new Exception("[Samplesheet Error] The '${key}' value for sample ${sampleCount} does not match the pattern '${regexPattern}'.")
                 }
                 else if(field.value.unique){
                     if(!(key in uniques)){uniques[key] = []}
@@ -98,22 +101,15 @@ class SamplesheetConversion {
                     }
                     uniques[key].add(input)
                 }
-                else if(!(input ==~ regexPattern) && input != '' && input) {
-                    throw new Exception("[Samplesheet Error] The '${key}' value for sample ${sampleCount} does not match the pattern '${regexPattern}'.")
-                }
 
                 if(metaNames) {
                     for(name : metaNames.tokenize(',')) {
-                        meta[name] = (input != '' && input) ? input.replace(' ', '_') : field.value.default ?: null
+                        meta[name] = (input != '' && input) ? checkAndTransform(input, field, sampleCount) : field.value.default ?: null
                     }
                 }
                 else {
-                    def inputFile = (input != '' && input) ? Nextflow.file(input) : field.value.default ? Nextflow.file(field.value.default) : []
-                    if( inputFile != [] && !inputFile.exists() ){
-                        throw new Exception("[Samplesheet Error] The '${key}' file (${input}) for sample ${sampleCount} does not exist.")
-                    }
+                    def inputFile = (input != '' && input) ? checkAndTransform(input, field, sampleCount) : field.value.default ? checkAndTransform(field.value.default, field, sampleCount) : []
                     output.add(inputFile)
-                    
                 }
             }
             output.add(0, meta)
@@ -122,6 +118,7 @@ class SamplesheetConversion {
 
     }
 
+    // Function to infer the file type of the samplesheet
     private static String getFileType(
         Path samplesheetFile
     ) {
@@ -146,11 +143,63 @@ class SamplesheetConversion {
         }
     }
 
+    // Function to get the header from a CSV or TSV file
     private static String getHeader(
         Path samplesheetFile
     ) {
         def String header
         samplesheetFile.withReader { header = it.readLine() }
         return header
+    }
+
+    // Function to check and transform an input field from the samplesheet
+    private static checkAndTransform(
+        input,
+        LinkedHashMap$Entry field,
+        Integer sampleCount
+    ) {
+        def String type = field.value.type
+        def String format = field.value.format
+        def String key = field.key
+
+        def ArrayList supportedTypes = ["string", "integer", "boolean"]
+        if(!(type in supportedTypes)) {
+            throw new Exception("[Samplesheet Schema Error] The type '${type}' specified for ${key} is not supported. Please specify one of these instead: ${supportedTypes}")
+        }
+
+        if(type == "string" || !type) {
+            def ArrayList supportedFormats = ["file-path", "directory-path"]
+            if(!(format in supportedFormats) && format) {
+                throw new Exception("[Samplesheet Schema Error] The string format '${format}' specified for ${key} is not supported. Please specify one of these instead: ${supportedFormats} or don't supply a format for a simple string.")
+            }
+            if(format == "file-path" || format =="directory-path") {
+                def inputFile = Nextflow.file(input)
+                if(!inputFile.exists()){
+                    throw new Exception("[Samplesheet Error] The '${key}' file or directory (${input}) for sample ${sampleCount} does not exist.")
+                }
+                return inputFile
+            }
+            else {
+                return input as String
+            }
+        }
+        else if(type == "integer") {
+            try {
+                return input as Integer
+            } catch(java.lang.NumberFormatException e) {
+                throw new Exception("[Samplesheet Error] The '${key}' value (${input}) for sample ${sampleCount} is not a valid integer.")
+            }
+        }
+        else if(type == "boolean") {
+            if(input.toLowerCase() == "true") {
+                return true
+            }
+            else if(input.toLowerCase() == "false") {
+                return false
+            }
+            else {
+                throw new Exception("[Samplesheet Error] The '${key}' value (${input}) for sample ${sampleCount} is not a valid boolean.")
+            }
+        }
     }
 }
