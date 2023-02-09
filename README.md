@@ -1,4 +1,6 @@
 # Nextflow Samplesheet Conversion
+Progress of this repository will be added to the `nf-validation` plugin for Nextflow!
+
 A script to validate a samplesheet (in CSV, TSV or YAML format) and convert it to a Nextflow channel.
 
 No external dependencies are needed to run this script. All required functionality is already installed along `nextflow`.
